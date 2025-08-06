@@ -41,6 +41,8 @@ type Usage struct {
 	TotalTokens      string `json:"totalTokens"`
 }
 
+var ErrBadRequest = fmt.Errorf("bad request")
+
 // Generate sends the provided messages to the model and returns the response.
 func (g *GenerativeModel) Generate(ctx context.Context, messages []Message) (*Response, error) {
 	finalMessages := make([]Message, 0, len(messages)+1)
@@ -78,6 +80,9 @@ func (g *GenerativeModel) Generate(ctx context.Context, messages []Message) (*Re
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusBadRequest {
+			return nil, ErrBadRequest
+		}
 		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, string(body))
 	}
@@ -89,3 +94,4 @@ func (g *GenerativeModel) Generate(ctx context.Context, messages []Message) (*Re
 
 	return &result, nil
 }
+
